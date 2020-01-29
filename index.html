@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf 8" />
+    <title>WHOIS_QUERY</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+  </head>
+  <body ng-app="domainSearch">
+    <script>
+      angular
+        .module("domainSearch", [])
+        .controller("SearchController", [
+          "$scope",
+          "$q",
+          "$http",
+          ($scope, $q, $http) => {
+            $scope.text = "HEXONET.net";
+            $scope.result = "";
+
+            $scope.submit = () => {
+              if ($scope.text) {
+                $http({
+                  method: "POST",
+                  url: "/get-whois",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  data: {
+                    domain: $scope.text
+                  }
+                }).then(
+                  function successCallback(response) {
+                    // decode the URI
+                    $scope.result = decodeURI(response.data);
+                    console.log($scope.result);
+                  },
+                  function errorCallback(response) {
+                    console.log(response);
+                  }
+                );
+              }
+            };
+          }
+        ])
+        .filter("to_trusted", [
+          "$sce",
+          // inject $sce service, and mark the HTML as "trusted"
+          $sce => {
+            return text => {
+              return $sce.trustAsHtml(text);
+            };
+          }
+        ]);
+    </script>
+
+    <!-- UI part -->
+    <div class="container" ng-controller="SearchController">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">HEXONET</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">WHOIS QUERY</a></li>
+          </ul>
+        </div>
+      </nav>
+      <form ng-submit="submit()">
+        <label for="domainName">Enter domain name:</label>
+        <input
+          type="text"
+          ng-model="text"
+          id="domainName"
+          name="text"
+          class="form-control"
+        />
+        <button type="submit" class="button-margin btn btn-primary">
+          Submit
+        </button>
+
+        <br />
+        <h3 class="test">WHOIS Result:</h3>
+        <!-- Outputting info into html -->
+        <div ng-bind-html="result | to_trusted" style="white-space: pre"></div>
+      </form>
+    </div>
+  </body>
+</html>
